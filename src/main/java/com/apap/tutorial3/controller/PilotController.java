@@ -27,7 +27,8 @@ public class PilotController {
 		pilotService.addPilot(pilot);
 		
 		model.addAttribute("title", "add");
-		return "add";
+		model.addAttribute("action", "Ditambahkan");
+		return "success";
 	}
 	
 	@RequestMapping("pilot/view")
@@ -46,15 +47,68 @@ public class PilotController {
 		return "viewall-pilot";
 	}
 	
-	@RequestMapping(value = {"/pilot", "pilot/view/{licenseNumber}"})
-	public String viewByLicenseNumber(@PathVariable Optional<String> licenseNumber, Model model) {
-		PilotModel pilot = pilotService.getPilotDetailByLicenseNumber(licenseNumber.get());
+	@RequestMapping(value = {"/pilot", "pilot/view/license-number/{licenseNumber}"})
+	public String viewByLicenseNumber(@PathVariable Optional<String> licenseNumber, Model model) {		
+		List<PilotModel> archive = pilotService.getPilotList();
 		
-		if (licenseNumber.isPresent()) {
-			model.addAttribute("title", "view");
-			model.addAttribute("pilot", pilot);
+		if(!licenseNumber.isPresent()) {
+			model.addAttribute("msg", "Nomor Lisensi Tidak Terisi");
+			return "fail";
+						
+		}else {
+			for(PilotModel pilot : archive) {
+				if(pilot.getLicenseNumber().equals(licenseNumber.get())) {
+					model.addAttribute("pilot", pilot);
+					return "view-pilot";
+				}
+			}
+			model.addAttribute("msg", "Nomor Lisensi Tidak Ditemukan");
+			return "fail";	
 		}
+	}
+	
+	@RequestMapping(value = {"/pilot", "pilot/update/license-number/{licenseNumber}/fly-hour/{newFlyHour}"})
+	public String update(@PathVariable Optional<String> licenseNumber,
+						@PathVariable Optional<Integer> newFlyHour, Model model) {	
 		
-		return "view-pilot";
+		List<PilotModel> archive = pilotService.getPilotList();
+		if(!licenseNumber.isPresent()) {
+			model.addAttribute("msg", "Nomor Lisensi Tidak Terisi");
+			return "fail";
+						
+		}else {
+			for(PilotModel pilot : archive) {
+				if(pilot.getLicenseNumber().equals(licenseNumber.get())) {
+					pilot.setFlyHour(newFlyHour.get());
+					model.addAttribute("action", "Diupdate");
+					model.addAttribute("title", "Update");
+					return "success";
+				}
+			}
+			model.addAttribute("msg", "Nomor Lisensi Tidak Ditemukan");
+			return "fail";	
+		}
+	}
+	
+	@RequestMapping(value = {"/pilot", "pilot/delete/id/{id}"})
+	public String delete(@PathVariable Optional<String> id, Model model) {
+		
+		List<PilotModel> archive = pilotService.getPilotList();
+		if(!id.isPresent()) {
+			model.addAttribute("msg", "Nomor Id Tidak Terisi");
+			return "fail";
+						
+		}else {
+			for(PilotModel pilot : archive) {
+				if(pilot.getId().equals(id.get())) {
+					archive.remove(pilot);
+					model.addAttribute("action", "Dihapus");
+					model.addAttribute("title", "Delete");
+					return "success";
+				}
+			}
+			model.addAttribute("msg", "Nomor Id Tidak Ditemukan");
+			return "fail";	
+		}
 	}
 }
